@@ -10,6 +10,20 @@ require('dotenv').config()
 const app = express();
 
 fccTesting(app); //For FCC testing purposes
+
+// Create a session middleware with the given options
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: true,
+  saveUninitialized: true
+}));
+
+// initialize passport middleware
+app.use(passport.initialize());
+
+// enable session support
+app.use(passport.session())
+
 app.use("/public", express.static(process.cwd() + "/public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
