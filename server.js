@@ -3,6 +3,9 @@
 const express = require("express");
 const fccTesting = require("./freeCodeCamp/fcctesting.js");
 const path = require('path');
+const passport = require('passport');
+const session = require('express-session');
+require('dotenv').config()
 
 const app = express();
 
