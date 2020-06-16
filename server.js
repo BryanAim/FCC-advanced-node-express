@@ -17,7 +17,7 @@ app.set('views', path.join(__dirname, 'views/pug'))// sets the view directory
 
 app.route("/").get((req, res) => {
   //Change the response to render the Pug template
-  res.render('index'); // render view file on this endpoint
+  res.render('index', {title: 'Hello', message: 'Please login'}); // render view file on this endpoint
 });
 
 const PORT = process.env.PORT || 3000;
