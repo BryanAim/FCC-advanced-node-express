@@ -22,7 +22,22 @@ app.use(session({
 app.use(passport.initialize());
 
 // enable session support
-app.use(passport.session())
+app.use(passport.session());
+
+const ObjectID = require('mongodb').ObjectID;
+
+passport.serializeUser((user, done)=> {
+  done(null, user._id);
+})
+passport.deserializeUser((id, done)=> {
+  // db.collection('users').findOne({
+  //   _id: new ObjectID(id)
+  // },
+  // (err, doc) => {
+  //   done(null, doc);
+  // })
+  done(null, null)
+})
 
 app.use("/public", express.static(process.cwd() + "/public"));
 app.use(express.json());
