@@ -4,6 +4,7 @@ const express = require("express");
 const fccTesting = require("./freeCodeCamp/fcctesting.js");
 const path = require('path');
 const passport = require('passport');
+const LocalStrategy = require('passport-local');
 const mongo = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 const session = require('express-session');
