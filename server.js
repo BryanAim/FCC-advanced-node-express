@@ -46,26 +46,56 @@ mongo.connect(process.env.DATABASE,{ useUnifiedTopology: true }, (err, db) => {
     passport.serializeUser((user, done)=> {
       done(null, user._id);
     });
+
+    passport.deserializeUser((id, done)=> {
+      db.collection('users').findOne({
+        _id: new ObjectID(id)
+      },
+      (err, doc) => {
+        done(null, doc);
+      })
+      
+    })
     
   }
 });
 
 
-passport.deserializeUser((id, done)=> {
-  db.collection('users').findOne({
-    _id: new ObjectID(id)
-  },
-  (err, doc) => {
-    done(null, doc);
-  })
-  
-})
+
+// tell passport to use an instantiated LocalStrategy object with a few settings defined
+
+passport.use( new LocalStrategy(
+  function (username, password, done) { 
+    // tries to find a user in our database with the username entered,
+    db.collection('users').findOne({ username: username }, function(err, user) {
+      console.log("User" + username + "attempted to log in");
+      if (err) {
+        return done(err)
+      }
+      if (!user) {
+        return done(null, false)
+      }
+      // checks for the password to match
+      if (password!== user.password) {
+        return done(null, false)
+      } else {
+        // if no errors have popped up that we checked for, like an incorrect password, the users object is returned and they are authenticated.
+        return done(null, user);
+      }
+    })
+   }
+))
+
 
 
 app.route("/").get((req, res) => {
   //Change the response to render the Pug template
-  res.render('index', {title: 'Hello', message: 'Please login'}); // render view file on this endpoint
+  res.render('index', {title: 'Hello', message: 'Please login', showLogin: true}); // render view file on this endpoint
 });
+
+// app.route('/login').post(passport.authenticate('local', {failureRedirect: '/' }), (req, res)=> {
+//   res.redirect('/profile');
+// })
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
