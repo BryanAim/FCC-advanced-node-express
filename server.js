@@ -36,12 +36,17 @@ app.use(passport.initialize());
 // enable session support
 app.use(passport.session());
 
-mongo.connect(process.env.DATABASE,{ useUnifiedTopology: true }, (err, db) => {
+mongo.connect(process.env.DATABASE,{ useUnifiedTopology: true }, (err, client) => {
+  let db = client.db('myproject')
   if (err) {
     console.log('Database error: ' + err);
     
   } else {
     console.log('Successful database connection');
+
+    
+// tell passport to use an instantiated LocalStrategy object with a few settings defined
+
 
     passport.serializeUser((user, done)=> {
       done(null, user._id);
@@ -56,35 +61,33 @@ mongo.connect(process.env.DATABASE,{ useUnifiedTopology: true }, (err, db) => {
       })
       
     })
+
+    passport.use( new LocalStrategy(
+      function (username, password, done) { 
+        // tries to find a user in our database with the username entered,
+        db.collection('users').findOne({ username: username }, function(err, user) {
+          console.log("User : " + username + " attempted to log in");
+          if (err) {
+            return done(err)
+          }
+          if (!user) {
+            return done(null, false)
+          }
+          // checks for the password to match
+          if (password!== user.password) {
+            return done(null, false)
+          } else {
+            // if no errors have popped up that we checked for, like an incorrect password, the users object is returned and they are authenticated.
+            return done(null, user);
+          }
+        })
+       }
+    ));
+    
     
   }
 });
 
-
-
-// tell passport to use an instantiated LocalStrategy object with a few settings defined
-
-passport.use( new LocalStrategy(
-  function (username, password, done) { 
-    // tries to find a user in our database with the username entered,
-    db.collection('users').findOne({ username: username }, function(err, user) {
-      console.log("User" + username + "attempted to log in");
-      if (err) {
-        return done(err)
-      }
-      if (!user) {
-        return done(null, false)
-      }
-      // checks for the password to match
-      if (password!== user.password) {
-        return done(null, false)
-      } else {
-        // if no errors have popped up that we checked for, like an incorrect password, the users object is returned and they are authenticated.
-        return done(null, user);
-      }
-    })
-   }
-))
 
 
 
@@ -93,9 +96,17 @@ app.route("/").get((req, res) => {
   res.render('index', {title: 'Hello', message: 'Please login', showLogin: true}); // render view file on this endpoint
 });
 
-// app.route('/login').post(passport.authenticate('local', {failureRedirect: '/' }), (req, res)=> {
-//   res.redirect('/profile');
-// })
+app
+.route('/login')
+.post(passport.authenticate('local', {failureRedirect: '/' }), (req, res)=> {
+  res.redirect('/profile');
+});
+
+app
+.route('/profile')
+.get((req, res)=> {
+  res.render(process.cwd() + '/views/pug/profile')
+})
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
