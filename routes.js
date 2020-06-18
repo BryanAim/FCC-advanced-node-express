@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 require('dotenv').config()
 
 
-module.exports = function(app, db) {
+module.exports = function (app, db) {
 
   function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
@@ -13,15 +13,15 @@ module.exports = function(app, db) {
     }
   }
   app.route('/')
-  .get((req, res) => {
-    //Change the response to render the Pug template
-    res.render(process.cwd() + '/views/pug/index', {
-      title: 'Hello',
-      message: 'Please login',
-      showLogin: true,
-      showRegistration: true
-    }); // render view file on this endpoint
-  });
+    .get((req, res) => {
+      //Change the response to render the Pug template
+      res.render(process.cwd() + '/views/pug/index', {
+        title: 'Hello',
+        message: 'Please login',
+        showLogin: true,
+        showRegistration: true
+      }); // render view file on this endpoint
+    });
 
   app
     .route('/login')
@@ -42,39 +42,39 @@ module.exports = function(app, db) {
   // registering a new user
   app.route('/register')
     .post((req, res, next) => {
-      var hash = bcrypt.hashSync(req.body.password, 12);
-      db.collection('users').findOne({
-        username: req.body.username
-      }, function (err, user) {
+        var hash = bcrypt.hashSync(req.body.password, 12);
+        db.collection('users').findOne({
+          username: req.body.username
+        }, function (err, user) {
 
-        if (err) {
-          next(err);
+          if (err) {
+            next(err);
 
-        } else if (user) {
-          res.redirect('/');
+          } else if (user) {
+            res.redirect('/');
 
-        } else {
-          db.collection('users').insertOne({
-              username: req.body.username,
-              password: hash
-            },
-            (err, doc) => {
-              if (err) {
-                res.redirect('/');
-              } else {
-                next(null, user);
-              }
-            })
-        }
+          } else {
+            db.collection('users').insertOne({
+                username: req.body.username,
+                password: hash
+              },
+              (err, doc) => {
+                if (err) {
+                  res.redirect('/');
+                } else {
+                  next(null, user);
+                }
+              })
+          }
+        })
+      },
+      passport.authenticate('local', {
+        successRedirect: '/profile',
+        failureRedirect: '/'
+      }),
+      (req, res, next) => {
+        res.redirect('/profile')
       })
-    },
-    passport.authenticate('local', {
-      successRedirect:'/profile',
-      failureRedirect: '/'
-    }),
-    (req, res, next) => {
-      res.redirect('/profile')
-    })
 
 
   app.route('/logout')
