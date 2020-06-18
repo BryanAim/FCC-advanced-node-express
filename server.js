@@ -8,6 +8,7 @@ const LocalStrategy = require('passport-local');
 const mongo = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 const session = require('express-session');
+const bcrypt = require('bcrypt');
 require('dotenv').config()
 
 function ensureAuthenticated(req, res, next) {
@@ -84,7 +85,7 @@ mongo.connect(process.env.DATABASE, {
             return done(null, false)
           }
           // checks for the password to match
-          if (password !== user.password) {
+          if (!bcrypt.compareSync(password, user.password)) {
             return done(null, false)
           } else {
             // if no errors have popped up that we checked for, like an incorrect password, the users object is returned and they are authenticated.
@@ -125,6 +126,7 @@ mongo.connect(process.env.DATABASE, {
     // registering a new user
     app.route('/register')
       .post((req, res, next) => {
+        var hash = bcrypt.hashSync(req.body.password, 12);
         db.collection('users').findOne({
           username: req.body.username
         }, function (err, user) {
@@ -135,7 +137,7 @@ mongo.connect(process.env.DATABASE, {
           } else {
             db.collection('users').insertOne({
                 username: req.body.username,
-                password: req.body.password
+                password: hash
               },
               (err, doc) => {
                 if (err) {
@@ -146,14 +148,14 @@ mongo.connect(process.env.DATABASE, {
               })
           }
         })
-      })
-
-    passport.authenticate('local', {
+      },
+      passport.authenticate('local', {
+        successRedirect:'/profile',
         failureRedirect: '/'
       }),
       (req, res, next) => {
         res.redirect('/profile')
-      }
+      })
 
 
     app.route('/logout')
